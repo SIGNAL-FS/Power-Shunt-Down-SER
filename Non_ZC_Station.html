@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Non_ZC_Station</title>
+    <style>
+        :root {
+            --primary: #1a2a3a;
+            --accent: #2980b9;
+            --success: #27ae60;
+            --danger: #c0392b;
+            --warning: #f39c12;
+            --bg: #eef1f5;
+            --card: #ffffff;
+            --orange: #e67e22;
+            --purple: #8e44ad;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: #333;
+            margin: 0; padding: 0;
+            line-height: 1.5;
+        }
+
+        #checklist-content {
+            max-width: 460px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 12px 0 8px;
+            border-bottom: 3px solid var(--primary);
+            margin-bottom: 16px;
+        }
+        .header h1 { margin: 0; font-size: 1.35em; color: var(--primary); letter-spacing: 0.5px; }
+        .header p { margin: 4px 0 0; font-size: 0.85em; color: #7f8c8d; }
+
+        .top-action-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f0f4f8;
+            border-radius: 10px;
+            border: 1px solid #dce3ea;
+        }
+        .top-btn {
+            padding: 11px 6px; border: none; border-radius: 8px;
+            font-size: 0.82em; font-weight: 700; cursor: pointer; color: #fff;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            transition: opacity 0.15s;
+        }
+        .top-btn:active { opacity: 0.75; }
+        .top-btn .icon { font-size: 1.3em; }
+        .btn-save    { background: var(--accent); }
+        .btn-clear   { background: var(--danger); }
+        .btn-pdf     { background: var(--success); }
+
+        .save-status {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            font-size: 0.78em; color: #7f8c8d; margin-bottom: 14px;
+            min-height: 18px; font-weight: 600;
+        }
+        .save-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #bdc3c7; transition: background 0.3s;
+        }
+        .save-dot.saving { background: var(--warning); animation: pulse 0.8s infinite; }
+        .save-dot.saved  { background: var(--success); }
+        .save-dot.error  { background: var(--danger); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .meta-card {
+            background: #f0f4f8; border-radius: 10px;
+            padding: 14px; margin-bottom: 14px; border: 1px solid #dce3ea;
+        }
+        .meta-card-title {
+            font-size: 0.75em; font-weight: 800; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 10px; padding-bottom: 6px;
+            border-bottom: 2px solid #dce3ea;
+        }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .meta-grid label {
+            display: flex; flex-direction: column;
+            font-size: 0.8em; font-weight: 700; color: #555;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .meta-grid label.full-width { grid-column: 1 / -1; }
+        .meta-grid input {
+            margin-top: 4px; padding: 9px 8px;
+            border: 1px solid #ccc; border-radius: 6px;
+            font-size: 0.95em; background: #fff;
+        }
+
+        .section-title {
+            background: var(--primary); color: #fff;
+            padding: 11px 15px; border-radius: 8px;
+            margin: 22px 0 14px; font-size: 1.05em;
+            font-weight: 700; text-align: center; letter-spacing: 0.3px;
+        }
+
+        .step-card {
+            background: var(--card);
+            border: 1px solid #dce3ea; border-radius: 10px;
+            margin-bottom: 12px; overflow: hidden;
+            break-inside: avoid; page-break-inside: avoid;
+        }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f7f9fb; padding: 9px 12px;
+            border-bottom: 1px solid #e8ecf0; flex-wrap: wrap; gap: 6px;
+        }
+        .step-num { font-weight: 800; color: var(--primary); font-size: 1em; }
+        .sys-tag {
+            padding: 2px 10px; border-radius: 10px;
+            font-size: 0.7em; font-weight: 700; color: #fff; text-transform: uppercase;
+        }
+        .tag-legacy { background: var(--orange); }
+        .tag-ctbc   { background: var(--purple); }
+
+        .check-label {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 0.85em; font-weight: 700; color: var(--success); cursor: pointer;
+        }
+        .status-check { width: 18px; height: 18px; accent-color: var(--success); }
+
+        .card-body { padding: 12px; }
+        .desc { font-weight: 700; font-size: 1em; color: var(--primary); margin-bottom: 4px; }
+        .action {
+            color: #555; font-size: 0.9em; margin-bottom: 12px;
+            line-height: 1.45; display: flex; align-items: flex-start; gap: 8px;
+        }
+        .action-text { flex: 1; }
+
+        .circle {
+            display: inline-block; width: 14px; height: 14px; border-radius: 50%;
+            flex-shrink: 0; margin-top: 3px; box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+        }
+        .circle-red   { background: #e74c3c; box-shadow: 0 0 0 2px rgba(231,76,60,0.2); }
+        .circle-green { background: #27ae60; box-shadow: 0 0 0 2px rgba(39,174,96,0.2); }
+        .action-red   { color: #b71c1c; font-weight: 700; }
+        .action-green { color: #1b5e20; font-weight: 700; }
+
+        .photo-section { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .btn-upload {
+            display: block; width: 100%; text-align: center; padding: 10px;
+            background: var(--accent); color: #fff; border-radius: 6px;
+            cursor: pointer; font-size: 0.9em; font-weight: 600;
+        }
+        .btn-upload:active { opacity: 0.8; }
+
+        .preview-wrapper { position: relative; width: 100%; display: none; }
+        .preview {
+            width: 100%; max-height: 320px; object-fit: contain;
+            border-radius: 8px; border: 1px solid #ddd; background: #fafafa;
+            padding: 4px; display: block;
+        }
+        .btn-clear-photo {
+            position: absolute; top: 10px; right: 10px;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(192,57,43,0.92); color: #fff;
+            border: 2px solid #fff; font-size: 1.1em; font-weight: 900;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            line-height: 1; padding: 0; z-index: 2;
+        }
+        .btn-clear-photo:active { background: rgba(192,57,43,1); transform: scale(0.92); }
+
+        /* ══ MULTI-PHOTO GRID — FIXED FOR FULL VIEW ══ */
+        .multi-photo-section {
+            background: #f8f9fa;
+            border: 1px dashed #bdc3c7;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+        .multi-photo-title {
+            font-size: 0.8em;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        /* Changed from 3 columns to 1 column for full-view photos */
+        .photo-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .photo-slot {
+            position: relative;
+            background: #fff;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            width: 100%;
+        }
+        .photo-slot.has-photo {
+            border-style: solid;
+            border-color: var(--success);
+        }
+        .slot-label {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #7f8c8d;
+            text-align: center;
+            padding: 6px;
+            text-transform: uppercase;
+            width: 100%;
+            background: #f8f9fa;
+        }
+        /* ══ KEY FIX: contain instead of cover, larger height ══ */
+        .slot-preview {
+            width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            display: none;
+            background: #fafafa;
+        }
+        .slot-upload-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 4px;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-align: center;
+        }
+        .slot-upload-btn:active { opacity: 0.8; }
+        .slot-clear {
+            position: absolute;
+            top: 8px; right: 8px;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: rgba(192,57,43,0.92);
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 0.9em;
+            font-weight: 900;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+            z-index: 2;
+        }
+        .slot-clear:active { transform: scale(0.9); }
+
+        .remarks-box { margin-top: 22px; }
+        .remarks-box label {
+            display: block; font-weight: 700; margin-bottom: 6px;
+            color: var(--primary); font-size: 0.95em;
+        }
+        textarea {
+            width: 100%; padding: 12px; border: 1px solid #ccc;
+            border-radius: 8px; font-family: inherit; font-size: 0.95em;
+            resize: vertical; min-height: 110px;
+        }
+
+        .signatures {
+            margin-top: 30px; display: flex; justify-content: space-between;
+            border-top: 2px dashed #bbb; padding-top: 18px; font-size: 0.85em;
+        }
+
+        .toast {
+            position: fixed; top: 20px; left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #333; color: #fff; padding: 12px 22px;
+            border-radius: 8px; font-size: 0.9em; font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 9999;
+            transition: transform 0.35s ease; max-width: 90%; text-align: center;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: var(--success); }
+        .toast.error   { background: var(--danger); }
+        .toast.info    { background: var(--accent); }
+
+        /* ══ PRINT / PDF — FULL-VIEW PHOTOS ══ */
+        @media print {
+            @page { size: A4 portrait; margin: 15mm; }
+            body {
+                background: #fff !important; margin: 0; padding: 0;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            #checklist-content { max-width: 100%; padding: 0; box-shadow: none; min-height: auto; }
+            .top-action-bar, .save-status, .toast, .btn-clear-photo, .slot-clear { display: none !important; }
+            .preview-wrapper { display: block !important; }
+            .step-card { break-inside: avoid; page-break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+            .section-title { break-after: avoid; page-break-after: avoid; }
+            .meta-card { break-inside: avoid; }
+            .preview { max-height: 400px; width: 100%; object-fit: contain; }
+            .header { border-bottom-width: 2px; }
+            .circle, .circle-red, .circle-green { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .multi-photo-section { border-style: solid; border-color: #999; }
+            
+            /* ══ KEY FIX: Full-view photos in PDF ══ */
+            .photo-grid { 
+                display: flex; 
+                flex-direction: column; 
+                gap: 10px; 
+            }
+            .photo-slot {
+                width: 100%;
+                min-height: auto;
+                border: 1px solid #999;
+                page-break-inside: avoid;
+            }
+            .slot-preview {
+                width: 100%;
+                max-height: 500px;
+                object-fit: contain;
+                display: block !important;
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+            }
+            .photo-slot:not(.has-photo) { display: none; }
+            .slot-label { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="checklist-content">
+
+    <div class="header">
+        <h1>Non_ZC_Station</h1>
+        <p>Power Shunt Down &amp; Power Up Procedure Checklist</p>
+    </div>
+
+    <div class="top-action-bar">
+        <button class="top-btn btn-save" onclick="saveProgress(true)">
+            <span class="icon">💾</span><span>Save Now</span>
+        </button>
+        <button class="top-btn btn-clear" onclick="clearData()">
+            <span class="icon">🗑️</span><span>Clear All</span>
+        </button>
+        <button class="top-btn btn-pdf" onclick="window.print()">
+            <span class="icon">📄</span><span>Save PDF</span>
+        </button>
+    </div>
+    <div class="save-status">
+        <span class="save-dot" id="saveDot"></span>
+        <span id="saveStatus">Auto-save active</span>
+    </div>
+
+    <div class="meta-card">
+        <div class="meta-card-title">Power Team Details</div>
+        <div class="meta-grid">
+            <label class="full-width">Power Team Name
+                <input type="text" id="meta-team" placeholder="e.g. Power Team Alpha">
+            </label>
+            <label class="full-width">Contact Number
+                <input type="tel" id="meta-contact" placeholder="e.g. 012-345 6789">
+            </label>
+        </div>
+    </div>
+
+    <div class="meta-card">
+        <div class="meta-card-title">Personnel &amp; Timing</div>
+        <div class="meta-grid">
+            <label>Date <input type="date" id="meta-date"></label>
+            <label>Technician Name <input type="text" id="meta-name" placeholder="Full Name"></label>
+            <label>Time Shunt Down <input type="time" id="meta-time-down"></label>
+            <label>Time Power Up <input type="time" id="meta-time-up"></label>
+        </div>
+    </div>
+
+    <div class="section-title">Part 1 — Power Shunt Down</div>
+    <div id="shunt-down-container"></div>
+
+    <div class="section-title">Part 2 — Power Up</div>
+    <div id="power-up-container"></div>
+
+    <div class="remarks-box">
+        <label>Remarks — Faults / Failures during Power Up:</label>
+        <textarea id="remarks" placeholder="Record any faults, LED failures, voltage anomalies or other observations here..."></textarea>
+    </div>
+
+    <div class="signatures">
+        <div><strong>Technician:</strong><br><br>___________________</div>
+        <div><strong>Supervisor:</strong><br><br>___________________</div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'NonZC_Station_Progress';
+let autoSaveTimer = null;
+let isSaving = false;
+
+const shuntDownData = [
+    { step:1,  sys:"N/A",    desc:"IMCC",                              action:"Inform IMCC for power shunt down, Epax 4993, HP 92331060",                                                    photoCount:0 },
+    { step:2,  sys:"N/A",    desc:"NMS",                               action:"Inform NMS for power shunt down, HP 87982981",                                                     photoCount:0 },
+    { step:3,  sys:"Legacy", desc:"FS2550 CB Panel",                   action:"Power down CB for all track circuit",                                                 photoCount:0 },
+    { step:4,  sys:"Legacy", desc:"PDP 1 Rack FS2550",                 action:"Power down all CB",                                                                   photoCount:1 },
+    { step:5,  sys:"Legacy", desc:"PDP 2 Rack FS2550 (If available)",  action:"Power down all CB (If available)",                                                    photoCount:1 },
+    { step:6,  sys:"Legacy", desc:"MJ80 Power cubicle",                action:"Power down all CB Point supply and switches",                                         photoCount:1 },
+    { step:7,  sys:"Legacy", desc:"MJ80 Isolator",                     action:"Power down Isolator",                                                                 photoCount:1 },
+    { step:8,  sys:"Legacy", desc:"Legacy Power Cubicle",              action:"Power down all CB and CB to FS2550 PDP",                                              photoCount:1 },
+    { step:9,  sys:"Legacy", desc:"415V Legacy Isolator",              action:"Switch OFF",                                                                          photoCount:1 },
+    { step:10, sys:"CTBC",   desc:"TCCMS",                             action:"Switch OFF",                                                                          photoCount:0 },
+    { step:11, sys:"CTBC",   desc:"Master and Slave MEI UT",           action:"Press both front switches at the same time to power down the UT, until LED OFF. UT back switch OFF", photoCount:0 },
+    { step:12, sys:"CTBC",   desc:"MEIT Rack",                         action:"Power off switch from behind",                                                        photoCount:0 },
+    { step:13, sys:"CTBC",   desc:"PDP",                               action:"Power down CB (one by one, start of WRU, DCS, MEIT, MEI, others)",                    photoCount:3 },
+    { step:14, sys:"CTBC",   desc:"ITP",                               action:"Power down all CB",                                                                   photoCount:1 },
+    { step:15, sys:"CTBC",   desc:"415V CTBC isolator",                action:"Power down Isolator",                                                                 photoCount:1 }
+];
+
+const powerUpData = [
+    { step:1,  sys:"Legacy", desc:"415V Legacy Isolator",              action:"Switch ON Isolator (Wait One minute before proceeding to power up others CB or switch)", photoCount:1 },
+    { step:2,  sys:"Legacy", desc:"Legacy Power Cubicle",              action:"Switch ON CB and CB to ITP FS2550",                                                    photoCount:1 },
+    { step:3,  sys:"Legacy", desc:"MJ80 Isolator",                     action:"Switch ON Isolator (Wait One minute before proceeding to power up others CB or switch)", photoCount:1 },
+    { step:4,  sys:"Legacy", desc:"MJ80 Power cubicle",                action:"Switch ON CB for Point supply and others Switches",                                    photoCount:1 },
+    { step:5,  sys:"Legacy", desc:"PDP 2 Rack FS2550 (If available)",  action:"Switch ON all CB",                                                                     photoCount:1 },
+    { step:6,  sys:"Legacy", desc:"PDP 1 Rack FS2550",                 action:"Switch ON all CB",                                                                     photoCount:1 },
+    { step:7,  sys:"Legacy", desc:"FS2550 CB Panel",                   action:"Switch ON all CB",                                                                     photoCount:0 },
+    { step:8,  sys:"Legacy", desc:"FS2550 TX and RX unit",             action:"Check track circuit LED health and measure MPV voltage",                               photoCount:0 },
+    { step:9,  sys:"CTBC",   desc:"415V CTBC isolator",                action:"Switch ON Isolator (Wait One minute before proceeding to power up others CB or switch)", photoCount:1 },
+    { step:10, sys:"CTBC",   desc:"ITP",                               action:"Switch ON all CB",                                                                     photoCount:1 },
+    { step:11, sys:"CTBC",   desc:"PDP",                               action:"Switch ON CB (one by one, start of WRU, DCS, MEIT, MEI, others)",                      photoCount:3 },
+    { step:12, sys:"CTBC",   desc:"TCCMS",                             action:"Switch ON",                                                                            photoCount:0 },
+    { step:13, sys:"CTBC",   desc:"MEIT Rack",                         action:"Switch ON MEIT (Wait five minutes before proceeding MEI UT)",                          photoCount:0 },
+    { step:14, sys:"CTBC",   desc:"Master and Slave MEI UT",           action:"Switch ON behind the switch and Turn ON the front switch. Selector switch position D",  photoCount:0 },
+    { step:15, sys:"CTBC",   desc:"IMCC",                              action:"Inform IMCC Power up. Check status, Epax 4993, HP 92331060",                           photoCount:0 },
+    { step:16, sys:"CTBC",   desc:"NMS",                               action:"Inform NMS Power up. Check status, HP 87982981",                                       photoCount:0 },
+    { step:17, sys:"CTBC",   desc:"FS Signal",                         action:"Reset ESP both bound. Test PSD door",                                                  photoCount:0 }
+];
+
+function showToast(msg, type='info', dur=2500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast ${type} show`;
+    clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), dur);
+}
+function setSaveStatus(s, txt) {
+    document.getElementById('saveDot').className = 'save-dot ' + s;
+    document.getElementById('saveStatus').textContent = txt;
+}
+function classifyAction(t) {
+    const l = t.toLowerCase();
+    if (/power\s*down|switch\s*off|power\s*off/.test(l)) return 'red';
+    if (/switch\s*on|power\s*up|power\s*on|turn\s*on|reset|test/.test(l)) return 'green';
+    return null;
+}
+
+function generateCards(data, cid, pfx) {
+    const c = document.getElementById(cid);
+    data.forEach(item => {
+        const tc = item.sys==="Legacy"?"tag-legacy":item.sys==="CTBC"?"tag-ctbc":"";
+        const tl = item.sys==="N/A"?"":`<span class="sys-tag ${tc}">${item.sys}</span>`;
+        const chkId=`${pfx}-check-${item.step}`;
+
+        let photoHTML = '';
+        if (item.photoCount === 1) {
+            const imgId=`${pfx}-img-${item.step}`;
+            const wrpId=`${pfx}-wrapper-${item.step}`;
+            const fId=`${pfx}-file-${item.step}`;
+            photoHTML = `
+                <div class="photo-section">
+                    <label class="btn-upload" id="${pfx}-upload-${item.step}">📷 Capture / Upload Photo
+                        <input type="file" id="${fId}" accept="image/*" capture="environment" hidden
+                               onchange="handleImageUpload(event,'${imgId}','${wrpId}','${fId}')">
+                    </label>
+                    <div class="preview-wrapper" id="${wrpId}">
+                        <img id="${imgId}" class="preview" alt="Photo">
+                        <button type="button" class="btn-clear-photo"
+                                onclick="clearPhoto('${imgId}','${wrpId}','${fId}')" title="Clear photo">✕</button>
+                    </div>
+                </div>`;
+        } else if (item.photoCount === 3) {
+            let slotsHTML = '';
+            for (let s = 0; s < 3; s++) {
+                const slotImgId = `${pfx}-img-${item.step}-${s}`;
+                const slotFileId = `${pfx}-file-${item.step}-${s}`;
+                const slotPrevId = `${pfx}-prev-${item.step}-${s}`;
+                const slotClearId = `${pfx}-clear-${item.step}-${s}`;
+                const slotBoxId = `${pfx}-box-${item.step}-${s}`;
+                slotsHTML += `
+                    <div class="photo-slot" id="${slotBoxId}">
+                        <label class="slot-label">Photo ${s+1}</label>
+                        <img id="${slotPrevId}" class="slot-preview" alt="Photo ${s+1}">
+                        <button type="button" class="slot-clear" id="${slotClearId}"
+                                onclick="clearSlotPhoto('${slotPrevId}','${slotBoxId}','${slotClearId}','${slotFileId}')"
+                                title="Clear this photo">✕</button>
+                        <label class="slot-upload-btn">📷 Take Photo ${s+1}
+                            <input type="file" id="${slotFileId}" accept="image/*" capture="environment" hidden
+                                   onchange="handleSlotUpload(event,'${slotPrevId}','${slotBoxId}','${slotClearId}')">
+                        </label>
+                    </div>`;
+            }
+            photoHTML = `
+                <div class="multi-photo-section">
+                    <div class="multi-photo-title">📸 Take 3 Photos (WRU / DCS / MEIT / MEI / Others)</div>
+                    <div class="photo-grid">${slotsHTML}</div>
+                </div>`;
+        }
+
+        const at = classifyAction(item.action);
+        let ch='', ac='';
+        if(at==='red'){ch='<span class="circle circle-red"></span>';ac='action-red';}
+        else if(at==='green'){ch='<span class="circle circle-green"></span>';ac='action-green';}
+
+        const card = document.createElement('div'); card.className='step-card';
+        card.innerHTML=`<div class="card-header"><span class="step-num">Step ${item.step}</span>${tl}
+            <label class="check-label"><input type="checkbox" class="status-check" id="${chkId}"> Done</label></div>
+            <div class="card-body"><div class="desc">${item.desc}</div>
+            <div class="action">${ch}<span class="action-text ${ac}">${item.action}</span></div>${photoHTML}</div>`;
+        c.appendChild(card);
+    });
+}
+
+function handleImageUpload(ev, imgId, wrpId, fId) {
+    const f=ev.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=function(e){const i=new Image();i.onload=function(){
+        const cv=document.createElement('canvas');let w=i.width,h=i.height;
+        if(w>1400){h=Math.round(h*1400/w);w=1400;}
+        cv.width=w;cv.height=h;const cx=cv.getContext('2d');
+        cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+        cx.drawImage(i,0,0,w,h);document.getElementById(imgId).src=cv.toDataURL('image/jpeg',0.9);
+        document.getElementById(wrpId).style.display='block';triggerAutoSave();
+    };i.src=e.target.result;};r.readAsDataURL(f);
+}
+
+function clearPhoto(imgId, wrpId, fId) {
+    if(!confirm("Clear this photo? You can retake it.")) return;
+    document.getElementById(imgId).src='';
+    document.getElementById(wrpId).style.display='none';
+    document.getElementById(fId).value='';
+    showToast('Photo cleared','info',1500); triggerAutoSave();
+}
+
+function handleSlotUpload(ev, prevId, boxId, clearId) {
+    const f=ev.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=function(e){const i=new Image();i.onload=function(){
+        const cv=document.createElement('canvas');let w=i.width,h=i.height;
+        if(w>1400){h=Math.round(h*1400/w);w=1400;}
+        cv.width=w;cv.height=h;const cx=cv.getContext('2d');
+        cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+        cx.drawImage(i,0,0,w,h);
+        const prev=document.getElementById(prevId);
+        prev.src=cv.toDataURL('image/jpeg',0.9);
+        prev.style.display='block';
+        document.getElementById(boxId).classList.add('has-photo');
+        document.getElementById(clearId).style.display='flex';
+        triggerAutoSave();
+    };i.src=e.target.result;};r.readAsDataURL(f);
+}
+
+function clearSlotPhoto(prevId, boxId, clearId, fileId) {
+    if(!confirm("Clear this photo? You can retake it.")) return;
+    document.getElementById(prevId).src='';
+    document.getElementById(prevId).style.display='none';
+    document.getElementById(boxId).classList.remove('has-photo');
+    document.getElementById(clearId).style.display='none';
+    document.getElementById(fileId).value='';
+    showToast('Photo cleared','info',1500); triggerAutoSave();
+}
+
+function triggerAutoSave() {
+    clearTimeout(autoSaveTimer); setSaveStatus('saving','Saving...');
+    autoSaveTimer=setTimeout(()=>saveProgress(false),600);
+}
+
+function saveProgress(manual=false) {
+    if(isSaving) return; isSaving=true;
+    try {
+        const d={meta:{
+            team:document.getElementById('meta-team').value,
+            contact:document.getElementById('meta-contact').value,
+            date:document.getElementById('meta-date').value,
+            name:document.getElementById('meta-name').value,
+            timeDown:document.getElementById('meta-time-down').value,
+            timeUp:document.getElementById('meta-time-up').value
+        },remarks:document.getElementById('remarks').value,checks:{},photos:{},multiPhotos:{},savedAt:new Date().toISOString()};
+
+        document.querySelectorAll('.status-check').forEach(c=>d.checks[c.id]=c.checked);
+
+        document.querySelectorAll('.preview').forEach(i=>{
+            if(i.src&&!i.src.endsWith('/')){
+                const w=i.parentElement;
+                if(w&&w.style.display!=='none') d.photos[i.id]=i.src;
+            }
+        });
+
+        document.querySelectorAll('.slot-preview').forEach(i=>{
+            if(i.src && i.style.display==='block' && i.src && !i.src.endsWith('/')){
+                d.multiPhotos[i.id]=i.src;
+            }
+        });
+
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(d));
+        setSaveStatus('saved',`Saved at ${new Date().toLocaleTimeString()}`);
+        if(manual) showToast('Progress saved!','success',1500);
+    } catch(e) {
+        setSaveStatus('error','Save failed');
+        showToast(e.name==='QuotaExceededError'?'Storage full!':'Save failed','error',4000);
+    } finally { isSaving=false; }
+}
+
+function loadProgress() {
+    try {
+        const raw=localStorage.getItem(STORAGE_KEY); if(!raw) return false;
+        const d=JSON.parse(raw);
+        if(d.meta){
+            document.getElementById('meta-team').value=d.meta.team||'';
+            document.getElementById('meta-contact').value=d.meta.contact||'';
+            document.getElementById('meta-date').value=d.meta.date||'';
+            document.getElementById('meta-name').value=d.meta.name||'';
+            document.getElementById('meta-time-down').value=d.meta.timeDown||'';
+            document.getElementById('meta-time-up').value=d.meta.timeUp||'';
+        }
+        if(d.remarks!==undefined) document.getElementById('remarks').value=d.remarks;
+        if(d.checks) Object.keys(d.checks).forEach(id=>{const c=document.getElementById(id);if(c)c.checked=d.checks[id];});
+        if(d.photos) Object.keys(d.photos).forEach(id=>{
+            const i=document.getElementById(id);
+            if(i){i.src=d.photos[id];const w=i.parentElement;if(w)w.style.display='block';}
+        });
+        if(d.multiPhotos) Object.keys(d.multiPhotos).forEach(id=>{
+            const prev=document.getElementById(id);
+            if(prev){
+                prev.src=d.multiPhotos[id];
+                prev.style.display='block';
+                const box=prev.parentElement;
+                if(box) box.classList.add('has-photo');
+                const clearBtn=box?box.querySelector('.slot-clear'):null;
+                if(clearBtn) clearBtn.style.display='flex';
+            }
+        });
+        if(d.savedAt) setSaveStatus('saved',`Last saved: ${new Date(d.savedAt).toLocaleString()}`);
+        return true;
+    } catch(e) { return false; }
+}
+
+function clearData() {
+    if(!confirm("Clear ALL data, photos and remarks?\n\nThis cannot be undone.")) return;
+    ['meta-team','meta-contact','meta-name','meta-time-down','meta-time-up'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('meta-date').valueAsDate=new Date();
+    document.getElementById('remarks').value='';
+    document.querySelectorAll('.status-check').forEach(c=>c.checked=false);
+    document.querySelectorAll('.preview').forEach(i=>i.src='');
+    document.querySelectorAll('.preview-wrapper').forEach(w=>w.style.display='none');
+    document.querySelectorAll('.slot-preview').forEach(i=>{i.src='';i.style.display='none';});
+    document.querySelectorAll('.photo-slot').forEach(b=>b.classList.remove('has-photo'));
+    document.querySelectorAll('.slot-clear').forEach(b=>b.style.display='none');
+    document.querySelectorAll('input[type="file"]').forEach(i=>i.value='');
+    localStorage.removeItem(STORAGE_KEY);
+    setSaveStatus('','Auto-save active');
+    showToast('All data cleared.','info');
+}
+
+function attachListeners() {
+    ['meta-date','meta-time-down','meta-time-up'].forEach(id=>{
+        const e=document.getElementById(id);if(e)e.addEventListener('change',triggerAutoSave);
+    });
+    ['meta-team','meta-contact','meta-name'].forEach(id=>{
+        const e=document.getElementById(id);if(e)e.addEventListener('input',triggerAutoSave);
+    });
+    document.getElementById('remarks').addEventListener('input',triggerAutoSave);
+    document.addEventListener('change',e=>{if(e.target.classList.contains('status-check'))triggerAutoSave();});
+}
+
+generateCards(shuntDownData,'shunt-down-container','sd');
+generateCards(powerUpData,'power-up-container','pu');
+document.getElementById('meta-date').valueAsDate=new Date();
+attachListeners();
+if(loadProgress()) showToast('Previous progress restored.','info',2000);
+else setSaveStatus('','Auto-save active');
+window.addEventListener('beforeunload',()=>saveProgress(false));
+</script>
+
+</body>
+</html>
