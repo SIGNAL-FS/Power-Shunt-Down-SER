@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Power Shunt Down & Power Up Procedure</title>
+    <style>
+        /* Reset and Base Settings for 9:16 Mobile View */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        /* Main Container simulating 9:16 Mobile Screen */
+        .mobile-container {
+            width: 100%;
+            max-width: 420px; /* Standard mobile width */
+            height: 95vh; /* Fixed height for mobile feel */
+            background-color: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Hide overflow on container */
+        }
+
+        /* Header Section */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+            padding: 20px 20px;
+            text-align: center;
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1.3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        /* Scrollable Content Area */
+        .content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* Enable scrolling for long content */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        }
+
+        /* Caution Box */
+        .caution-box {
+            background-color: #fff8e1;
+            border: 1px solid #ffe082;
+            border-left: 6px solid #ff8f00;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .caution-title {
+            color: #e65100;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .caution-list {
+            list-style-type: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        .caution-list li {
+            color: #424242;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .caution-list li::before {
+            content: "•";
+            color: #ff8f00;
+            font-size: 1.2rem;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+
+        /* Annex C Section Styles */
+        .annex-section {
+            margin-top: 15px;
+            border-top: 1px dashed #ff8f00;
+            padding-top: 12px;
+        }
+
+        .annex-title {
+            font-weight: bold;
+            color: #e65100;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .scenario-title {
+            font-weight: bold;
+            color: #424242;
+            font-size: 0.9rem;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+
+        .scenario-list {
+            padding-left: 20px;
+            color: #424242;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        
+        .scenario-list li {
+            margin-bottom: 6px;
+        }
+
+        /* Menu Buttons */
+        .menu-section {
+            margin-top: auto;
+            padding-bottom: 10px;
+            flex-shrink: 0; /* Keep buttons visible at bottom if possible, or let them scroll */
+        }
+
+        .menu-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .menu-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            margin-bottom: 12px;
+            text-align: center;
+            text-decoration: none;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-zc {
+            background: linear-gradient(135deg, #0052D4 0%, #4364F7 100%);
+        }
+
+        .btn-non-zc {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #064e3b;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 12px;
+            font-size: 0.75rem;
+            color: #adb5bd;
+            border-top: 1px solid #f1f3f5;
+            flex-shrink: 0;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Power Shunt Down<br>and Power Up Procedure</h1>
+            <p>Select Station Type to Begin</p>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="content">
+            <!-- Caution & Preparation -->
+            <div class="caution-box">
+                <div class="caution-title">
+                    ⚠️ Caution and Preparation
+                </div>
+                <ul class="caution-list">
+                    <li>Ensure minimum 2 manpower on standby for equipment verification.</li>
+                    <li>Verify all spare parts (Fuses, CBTC PSU, Relays if applicable) are readily available before starting.</li>
+                    <li>Always coordinate with Power Team (POW staff) before switching equipment.</li>
+                </ul>
+                
+                <!-- Annex C Content -->
+                <div class="annex-section">
+                    <div class="annex-title">Annex C: Steps for clearing of Non-Communicating Obstructions (NCOs)</div>
+                    
+                    <div class="scenario-title">Scenario 1 – UPS replacement work at station located at Zone Boundary</div>
+                    <ol class="scenario-list">
+                        <li>SIG FS team to standby at both ZC stations of the zone boundary where UPS replacement work is carried out.</li>
+                        <li>IMCC shall perform remote reset of the MAUs of both ZCs concurrently. NCOs should clear upon successful restart.</li>
+                        <li>If the remote MAU reset command is unsuccessful or the MAU software hangs, SIG FS team shall perform a hard reset of the affected MAU(s).</li>
+                        <li>If any NCOs remain, OCC shall deploy sweep trains to sweep the affected tracks and clear the residual NCOs.</li>
+                        <li>If the MAU soft reset has been carried out, SIG FS will perform MAU hard reset after EOT.</li>
+                    </ol>
+
+                    <div class="scenario-title">Scenario 2 – UPS replacement work at a station not located at Zone Boundary</div>
+                    <ol class="scenario-list">
+                        <li>SIG FS team shall standby at the ZC station where the UPS replacement work is carried out.</li>
+                        <li>IMCC shall perform a remote reset of the affected MAU.</li>
+                        <li>If the remote MAU reset command is unsuccessful or the MAU software hangs, SIG FS team shall perform a hard reset of the MAU. NCOs should clear thereafter.</li>
+                        <li>If the MAU soft reset has been carried out, SIG FS will perform MAU hard reset during EOT.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Menu Selection -->
+            <div class="menu-section">
+                <div class="menu-label">Select Procedure</div>
+                
+                <a href="ZC_Station.html" class="menu-btn btn-zc">
+                    ZC Station
+                </a>
+                
+                <a href="Non_ZC_Station.html" class="menu-btn btn-non-zc">
+                    Non-ZC Station
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Safety First • Procedure v1.0
+        </div>
+    </div>
+
+</body>
+</html>
